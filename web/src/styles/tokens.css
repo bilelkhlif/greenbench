@@ -1,0 +1,92 @@
+/* GreenBench "aurora" theme: a night sky lit by green light. Dark only.
+   Glass panels, glowing accents, Space Grotesk display type over Inter text, JetBrains Mono for data labels. */
+
+:root {
+  color-scheme: dark;
+
+  /* Night */
+  --bg: #05080d;
+  --bg-2: #0a111a;
+  --glass: rgba(13, 20, 31, 0.62);
+  --glass-strong: rgba(14, 21, 32, 0.84);
+  --glass-soft: rgba(255, 255, 255, 0.035);
+  --line: rgba(255, 255, 255, 0.075);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --line-accent: rgba(100, 220, 200, 0.32);
+
+  /* Ink */
+  --ink: #e6edf3;
+  --ink-heading: #f5f9fc;
+  --ink-2: #a9b5c2;
+  --ink-3: #7a8896;
+
+  /* Light sources */
+  --mint: #64dcc8;
+  --mint-2: #9af3e2;
+  --emerald: #34d399;
+  --indigo: #818cf8;
+  --violet: #a78bfa;
+  --amber: #f5b544;
+  --rose: #fb7185;
+  --cyan: #22d3ee;
+  --accent-ink: #04211c;
+
+  --grad-text: linear-gradient(120deg, #ffffff 0%, #d9fff6 45%, #8be9d6 100%);
+  --grad-mint: linear-gradient(135deg, #8ef0dc 0%, #64dcc8 45%, #34d399 100%);
+  --grad-warm: linear-gradient(135deg, #ffe0a3 0%, #f5b544 55%, #f08c4a 100%);
+  --grad-cool: linear-gradient(135deg, #c7d2fe 0%, #818cf8 55%, #22d3ee 100%);
+
+  /* Chart marks: dark steps validated all-pairs (CVD, normal vision, 3:1 contrast) on #101820 and #0b1118 */
+  --series-1: #199e70;
+  --series-2: #c98500;
+  --series-3: #9085e9;
+  --series-4: #dc51b1;
+  --chart-ring: #0f1620;
+  --chart-ref: rgba(255, 255, 255, 0.32);
+  --chart-baseline: #8794a3;
+  --frontier: rgba(154, 243, 226, 0.75);
+  --delta-good: #34c997;
+  --delta-bad: #ef7b5c;
+  --grid: rgba(255, 255, 255, 0.06);
+  --axis: rgba(255, 255, 255, 0.16);
+
+  --radius-xs: 6px; --radius-sm: 10px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px; --radius-pill: 999px;
+  --shadow-1: 0 12px 32px rgba(0, 0, 0, 0.32);
+  --shadow-2: 0 22px 54px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(100, 220, 200, 0.35), 0 18px 48px rgba(0, 0, 0, 0.45), 0 0 32px rgba(100, 220, 200, 0.16);
+
+  --font: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk Variable", "Space Grotesk", var(--font);
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-h: 64px;
+  --page-w: 1320px;
+}
+
+/* Registered so scene changes and hover glows interpolate instead of jumping */
+@property --a1 { syntax: "<color>"; inherits: true; initial-value: #2ee6a6; }
+@property --a2 { syntax: "<color>"; inherits: true; initial-value: #22d3ee; }
+@property --a3 { syntax: "<color>"; inherits: true; initial-value: #6366f1; }
+@property --orb-x { syntax: "<percentage>"; inherits: true; initial-value: 80%; }
+@property --orb-y { syntax: "<percentage>"; inherits: true; initial-value: 16%; }
+@property --tilt { syntax: "<angle>"; inherits: true; initial-value: -8deg; }
+@property --spot-a { syntax: "<number>"; inherits: false; initial-value: 0; }
+
+/* Type scale */
+.display-l { font: 700 clamp(44px, 7vw, 88px)/1 var(--font-display); letter-spacing: -0.035em; }
+.display-m { font: 700 clamp(36px, 5vw, 60px)/1.04 var(--font-display); letter-spacing: -0.03em; }
+.display-s { font: 700 clamp(34px, 4.4vw, 56px)/1.05 var(--font-display); letter-spacing: -0.03em; }
+.headline-l { font: 600 32px/1.15 var(--font-display); letter-spacing: -0.02em; }
+.headline-m { font: 600 28px/1.2 var(--font-display); letter-spacing: -0.02em; }
+.headline-s { font: 600 24px/1.25 var(--font-display); letter-spacing: -0.015em; }
+.title-l { font: 600 20px/1.3 var(--font-display); letter-spacing: -0.01em; }
+.title-m { font: 600 15.5px/1.4 var(--font); letter-spacing: -0.005em; }
+.title-s { font: 600 14px/1.4 var(--font); }
+.label-l { font: 500 14px/20px var(--font); }
+.label-m { font: 500 12px/16px var(--font); letter-spacing: 0.02em; }
+.label-s { font: 500 11px/16px var(--font); letter-spacing: 0.03em; }
+.body-l { font: 400 17px/1.7 var(--font); }
+.body-m { font: 400 14px/1.6 var(--font); }
+.body-s { font: 400 12.5px/1.55 var(--font); }
+.eyebrow { font: 600 12px/1.2 var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--mint); }
+.mono { font-family: var(--font-mono); }

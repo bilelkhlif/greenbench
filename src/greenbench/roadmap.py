@@ -1,0 +1,70 @@
+"""The 12-week roadmap from the project proposal, with what has been delivered so far."""
+
+CURRENT_WEEK = 7
+
+PHASES = [
+    {
+        "id": "state-of-the-art", "title": "State of the art", "weeks": [1, 3], "status": "done",
+        "summary": "Methods & workloads",
+        "deliverable": "State-of-the-art report on energy-benchmarking methods",
+        "links": [{"label": "State-of-the-art report", "doc": "state-of-the-art"}],
+        "tasks": [
+            {"week": 1, "status": "done", "text": "Survey energy measurement: on-chip counters (RAPL), external "
+             "wattmeters, software estimators (CodeCarbon, Scaphandre, PowerJoular)."},
+            {"week": 2, "status": "done", "text": "Survey benchmarking methodology: bias sources (warm-up, DVFS, "
+             "background load, virtualisation), repetitions, non-parametric statistics, effect sizes."},
+            {"week": 3, "status": "done", "text": "Select 4 workloads and their candidate variants; write the "
+             "state-of-the-art report."},
+        ],
+    },
+    {
+        "id": "protocol", "title": "Measurement protocol", "weeks": [4, 6], "status": "done",
+        "summary": "Set up & automate",
+        "deliverable": "Documented & automated measurement protocol",
+        "links": [{"label": "Measurement protocol", "doc": "measurement-protocol"}],
+        "tasks": [
+            {"week": 4, "status": "done", "text": "Energy meters: Windows Energy Meter Interface (RAPL package and "
+             "cores), Linux powercap RAPL, software model for cross-checking."},
+            {"week": 5, "status": "done", "text": "Seeded multi-source datasets in 7 storage formats; 11 workload "
+             "variants validated by result checksums; one isolated process per run."},
+            {"week": 6, "status": "done", "text": "Automation: warm-ups, randomised rounds, idle baseline and drift, "
+             "background-load check, statistics pipeline, tests; protocol document."},
+        ],
+    },
+    {
+        "id": "campaign", "title": "Benchmark campaign", "weeks": [7, 9], "status": "in-progress",
+        "summary": "Run & analyze",
+        "deliverable": "Benchmark results + statistical analysis",
+        "links": [{"label": "Week-7 campaign report", "doc": "week-7-report"}],
+        "tasks": [
+            {"week": 7, "status": "done", "text": "Pilot campaign on machine A (5 studies, 10 repetitions per "
+             "configuration), first statistical analysis, results dashboard."},
+            {"week": 8, "status": "todo", "text": "Full campaign (30 repetitions) and a second machine: Linux with "
+             "RAPL, run from the pinned Docker image."},
+            {"week": 9, "status": "todo", "text": "Final analysis: cross-machine comparison, sensitivity to data "
+             "scale, model-vs-hardware validation."},
+        ],
+    },
+    {
+        "id": "packaging", "title": "Packaging & defense", "weeks": [10, 12], "status": "todo",
+        "summary": "Package & present",
+        "deliverable": "GreenBench tool & docs, recommendations report, final report & defense",
+        "links": [],
+        "tasks": [
+            {"week": 10, "status": "todo", "text": "Package GreenBench (pip + Docker) with a 'bring your own "
+             "workload' guide."},
+            {"week": 11, "status": "todo", "text": "Recommendations report and final report."},
+            {"week": 12, "status": "todo", "text": "Defense preparation."},
+        ],
+    },
+]
+
+DOCS = {
+    "state-of-the-art": ("01-state-of-the-art.md", "State of the art"),
+    "measurement-protocol": ("02-measurement-protocol.md", "Measurement protocol"),
+    "week-7-report": ("03-week-7-campaign-report.md", "Week-7 campaign report"),
+}
+
+
+def roadmap() -> dict:
+    return {"current_week": CURRENT_WEEK, "total_weeks": 12, "phases": PHASES}

@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+build/
+dist/
+
+# GreenBench workspace: generated datasets and scratch files (rebuilt deterministically)
+workspace/
+
+# Campaign control files
+results/**/cancel.flag
+results/**/runner.log
+
+# Frontend
+web/node_modules/
+web/dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+~$*
+
+# GitHub Pages build (published to the gh-pages branch by web/scripts/deploy-pages.mjs)
+web/dist-pages/

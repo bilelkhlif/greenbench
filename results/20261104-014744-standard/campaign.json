@@ -1,0 +1,1143 @@
+{
+  "id": "20261104-014744-standard",
+  "created_at": "2026-11-04T00:47:45.017713+00:00",
+  "config": {
+    "preset": "standard",
+    "studies": [
+      "join-algorithms",
+      "storage-formats",
+      "text-search",
+      "streaming-windows",
+      "indexing"
+    ],
+    "scale": "medium",
+    "repetitions": 10,
+    "warmups": 2,
+    "cooldown_s": 0.5,
+    "idle_s": 10.0,
+    "meter": "auto",
+    "seed": 53264,
+    "notes": "Week 7 pilot campaign: all five studies on machine A (laptop, AC power).",
+    "campaign_id": "20261104-014744-standard"
+  },
+  "environment": {
+    "greenbench": "0.7.0",
+    "os": {
+      "system": "Windows",
+      "release": "11",
+      "version": "10.0.26200",
+      "machine": "AMD64"
+    },
+    "python": {
+      "version": "3.11.9",
+      "implementation": "CPython"
+    },
+    "cpu": {
+      "name": "AMD Ryzen 7 6800HS with Radeon Graphics",
+      "physical_cores": 8,
+      "logical_cpus": 16,
+      "max_mhz": 3201,
+      "tdp_w": 35.0,
+      "tdp_source": "nominal TDP of the Ryzen 7 6800HS family"
+    },
+    "memory_gb": 23.2,
+    "power": {
+      "ac_plugged": true,
+      "battery_percent": 98,
+      "plan": "Turbo"
+    },
+    "virtualization": {
+      "container": false,
+      "wsl": false,
+      "vm_guest": false,
+      "virtualized": false
+    },
+    "libraries": {
+      "numpy": "2.4.6",
+      "pyarrow": "26.0.1",
+      "scipy": "1.17.1",
+      "psutil": "7.2.2"
+    },
+    "meters": {
+      "emi": {
+        "available": true,
+        "name": "emi",
+        "kind": "hardware",
+        "domains": [
+          "pkg",
+          "cores"
+        ],
+        "primary_domain": "pkg",
+        "provider": "Microsoft/PPM",
+        "interface": "Windows Energy Meter Interface (EMI)",
+        "channels": {
+          "RAPL_Package0_PKG": "pkg",
+          "RAPL_Package0_Core0_CORE": "cores",
+          "RAPL_Package0_Core1_CORE": "cores",
+          "RAPL_Package0_Core2_CORE": "cores",
+          "RAPL_Package0_Core3_CORE": "cores",
+          "RAPL_Package0_Core4_CORE": "cores",
+          "RAPL_Package0_Core5_CORE": "cores",
+          "RAPL_Package0_Core6_CORE": "cores",
+          "RAPL_Package0_Core7_CORE": "cores"
+        },
+        "slow_domains": []
+      },
+      "rapl": {
+        "available": false,
+        "reason": "no /sys/class/powercap (not Linux, or RAPL not exposed, e.g. inside a VM)"
+      }
+    }
+  },
+  "primary_meter": {
+    "name": "emi",
+    "kind": "hardware",
+    "domains": [
+      "pkg",
+      "cores"
+    ],
+    "primary_domain": "pkg",
+    "provider": "Microsoft/PPM",
+    "interface": "Windows Energy Meter Interface (EMI)",
+    "channels": {
+      "VDDCR_VDD Power": "slow_vddcr_vdd_power",
+      "VDDCR_SOC Power": "slow_vddcr_soc_power",
+      "Current Socket Power": "slow_current_socket_power",
+      "Apu Power": "slow_apu_power",
+      "RAPL_Package0_PKG": "pkg",
+      "RAPL_Package0_Core0_CORE": "cores",
+      "RAPL_Package0_Core1_CORE": "cores",
+      "RAPL_Package0_Core2_CORE": "cores",
+      "RAPL_Package0_Core3_CORE": "cores",
+      "RAPL_Package0_Core4_CORE": "cores",
+      "RAPL_Package0_Core5_CORE": "cores",
+      "RAPL_Package0_Core6_CORE": "cores",
+      "RAPL_Package0_Core7_CORE": "cores"
+    },
+    "slow_domains": [
+      "slow_apu_power",
+      "slow_current_socket_power",
+      "slow_vddcr_soc_power",
+      "slow_vddcr_vdd_power"
+    ]
+  },
+  "studies": {
+    "join-algorithms": {
+      "id": "join-algorithms",
+      "title": "Join algorithm \u00d7 parallelism",
+      "question": "Which join algorithm and thread count compute the same join with the least energy?",
+      "workload": "joins",
+      "factors": {
+        "variant": [
+          "hash",
+          "sort_merge"
+        ],
+        "threads": [
+          1,
+          2,
+          4,
+          8
+        ]
+      },
+      "baseline": {
+        "variant": "hash",
+        "threads": 1
+      },
+      "fixed": {
+        "storage": "parquet-snappy"
+      },
+      "group_by": [],
+      "fallback_baselines": [],
+      "configs": [
+        "joins/hash/storage=parquet-snappy,threads=1",
+        "joins/hash/storage=parquet-snappy,threads=2",
+        "joins/hash/storage=parquet-snappy,threads=4",
+        "joins/hash/storage=parquet-snappy,threads=8",
+        "joins/sort_merge/storage=parquet-snappy,threads=1",
+        "joins/sort_merge/storage=parquet-snappy,threads=2",
+        "joins/sort_merge/storage=parquet-snappy,threads=4",
+        "joins/sort_merge/storage=parquet-snappy,threads=8"
+      ]
+    },
+    "storage-formats": {
+      "id": "storage-formats",
+      "title": "Storage format \u00d7 compression",
+      "question": "How much energy does the on-disk format cost when the computation is identical?",
+      "workload": "joins",
+      "factors": {
+        "storage": [
+          "csv",
+          "csv-zstd",
+          "json",
+          "json-zstd",
+          "parquet",
+          "parquet-snappy",
+          "parquet-zstd"
+        ]
+      },
+      "baseline": {
+        "storage": "csv"
+      },
+      "fixed": {
+        "variant": "hash",
+        "threads": 1
+      },
+      "group_by": [],
+      "fallback_baselines": [],
+      "configs": [
+        "joins/hash/storage=csv,threads=1",
+        "joins/hash/storage=csv-zstd,threads=1",
+        "joins/hash/storage=json,threads=1",
+        "joins/hash/storage=json-zstd,threads=1",
+        "joins/hash/storage=parquet,threads=1",
+        "joins/hash/storage=parquet-snappy,threads=1",
+        "joins/hash/storage=parquet-zstd,threads=1"
+      ]
+    },
+    "text-search": {
+      "id": "text-search",
+      "title": "Full scan vs inverted index",
+      "question": "From how many queries does building an inverted index pay back its energy?",
+      "workload": "text_search",
+      "factors": {
+        "variant": [
+          "regex_scan",
+          "inverted_index"
+        ],
+        "n_queries": [
+          1,
+          10,
+          100
+        ]
+      },
+      "baseline": {
+        "variant": "regex_scan"
+      },
+      "fixed": {
+        "storage": "parquet-snappy"
+      },
+      "group_by": [
+        "n_queries"
+      ],
+      "fallback_baselines": [],
+      "configs": [
+        "text_search/regex_scan/n_queries=1,storage=parquet-snappy",
+        "text_search/regex_scan/n_queries=10,storage=parquet-snappy",
+        "text_search/regex_scan/n_queries=100,storage=parquet-snappy",
+        "text_search/inverted_index/n_queries=1,storage=parquet-snappy",
+        "text_search/inverted_index/n_queries=10,storage=parquet-snappy",
+        "text_search/inverted_index/n_queries=100,storage=parquet-snappy"
+      ]
+    },
+    "streaming-windows": {
+      "id": "streaming-windows",
+      "title": "Batch vs incremental, exact vs approximate",
+      "question": "How much energy do incremental windows and approximate sketches save, and at what accuracy?",
+      "workload": "streaming",
+      "factors": {
+        "variant": [
+          "batch_recompute",
+          "incremental",
+          "approx_hll",
+          "approx_sampling"
+        ]
+      },
+      "baseline": {
+        "variant": "batch_recompute"
+      },
+      "fixed": {
+        "storage": "parquet-snappy"
+      },
+      "group_by": [],
+      "fallback_baselines": [],
+      "configs": [
+        "streaming/batch_recompute/storage=parquet-snappy",
+        "streaming/incremental/storage=parquet-snappy",
+        "streaming/approx_hll/storage=parquet-snappy",
+        "streaming/approx_sampling/storage=parquet-snappy"
+      ]
+    },
+    "indexing": {
+      "id": "indexing",
+      "title": "No index vs B+-tree vs hash index",
+      "question": "Which index answers the query batch with the least energy, build cost included?",
+      "workload": "indexing",
+      "factors": {
+        "variant": [
+          "scan",
+          "btree",
+          "hash_index"
+        ],
+        "n_queries": [
+          1000,
+          100000
+        ]
+      },
+      "baseline": {
+        "variant": "scan"
+      },
+      "fixed": {
+        "storage": "parquet-snappy"
+      },
+      "group_by": [
+        "n_queries"
+      ],
+      "fallback_baselines": [
+        {
+          "variant": "btree"
+        }
+      ],
+      "configs": [
+        "indexing/scan/n_queries=1000,storage=parquet-snappy",
+        "indexing/scan/n_queries=100000,storage=parquet-snappy",
+        "indexing/btree/n_queries=1000,storage=parquet-snappy",
+        "indexing/btree/n_queries=100000,storage=parquet-snappy",
+        "indexing/hash_index/n_queries=1000,storage=parquet-snappy",
+        "indexing/hash_index/n_queries=100000,storage=parquet-snappy"
+      ]
+    }
+  },
+  "configs": [
+    {
+      "key": "joins/hash/storage=parquet-snappy,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash join \u00b7 1 thread",
+      "studies": [
+        "join-algorithms",
+        "storage-formats"
+      ],
+      "labels": {
+        "join-algorithms": "Hash join \u00b7 1 thread",
+        "storage-formats": "Parquet + Snappy"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=parquet-snappy,threads=2",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 2,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash join \u00b7 2 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Hash join \u00b7 2 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=parquet-snappy,threads=4",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 4,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash join \u00b7 4 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Hash join \u00b7 4 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=parquet-snappy,threads=8",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 8,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash join \u00b7 8 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Hash join \u00b7 8 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/sort_merge/storage=parquet-snappy,threads=1",
+      "workload": "joins",
+      "variant": "sort_merge",
+      "params": {
+        "threads": 1,
+        "storage": "parquet-snappy"
+      },
+      "label": "Sort-merge join \u00b7 1 thread",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Sort-merge join \u00b7 1 thread"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/sort_merge/storage=parquet-snappy,threads=2",
+      "workload": "joins",
+      "variant": "sort_merge",
+      "params": {
+        "threads": 2,
+        "storage": "parquet-snappy"
+      },
+      "label": "Sort-merge join \u00b7 2 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Sort-merge join \u00b7 2 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/sort_merge/storage=parquet-snappy,threads=4",
+      "workload": "joins",
+      "variant": "sort_merge",
+      "params": {
+        "threads": 4,
+        "storage": "parquet-snappy"
+      },
+      "label": "Sort-merge join \u00b7 4 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Sort-merge join \u00b7 4 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/sort_merge/storage=parquet-snappy,threads=8",
+      "workload": "joins",
+      "variant": "sort_merge",
+      "params": {
+        "threads": 8,
+        "storage": "parquet-snappy"
+      },
+      "label": "Sort-merge join \u00b7 8 threads",
+      "studies": [
+        "join-algorithms"
+      ],
+      "labels": {
+        "join-algorithms": "Sort-merge join \u00b7 8 threads"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=csv,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "csv"
+      },
+      "label": "CSV",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "CSV"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=csv-zstd,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "csv-zstd"
+      },
+      "label": "CSV + Zstd",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "CSV + Zstd"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=json,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "json"
+      },
+      "label": "JSON lines",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "JSON lines"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=json-zstd,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "json-zstd"
+      },
+      "label": "JSON lines + Zstd",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "JSON lines + Zstd"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=parquet,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "parquet"
+      },
+      "label": "Parquet (uncompressed)",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "Parquet (uncompressed)"
+      },
+      "skipped": null
+    },
+    {
+      "key": "joins/hash/storage=parquet-zstd,threads=1",
+      "workload": "joins",
+      "variant": "hash",
+      "params": {
+        "threads": 1,
+        "storage": "parquet-zstd"
+      },
+      "label": "Parquet + Zstd",
+      "studies": [
+        "storage-formats"
+      ],
+      "labels": {
+        "storage-formats": "Parquet + Zstd"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/regex_scan/n_queries=1,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "regex_scan",
+      "params": {
+        "n_queries": 1,
+        "storage": "parquet-snappy"
+      },
+      "label": "Full scan (regex) \u00b7 1 query",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Full scan (regex) \u00b7 1 query"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/regex_scan/n_queries=10,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "regex_scan",
+      "params": {
+        "n_queries": 10,
+        "storage": "parquet-snappy"
+      },
+      "label": "Full scan (regex) \u00b7 10 queries",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Full scan (regex) \u00b7 10 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/regex_scan/n_queries=100,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "regex_scan",
+      "params": {
+        "n_queries": 100,
+        "storage": "parquet-snappy"
+      },
+      "label": "Full scan (regex) \u00b7 100 queries",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Full scan (regex) \u00b7 100 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/inverted_index/n_queries=1,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "inverted_index",
+      "params": {
+        "n_queries": 1,
+        "storage": "parquet-snappy"
+      },
+      "label": "Inverted index \u00b7 1 query",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Inverted index \u00b7 1 query"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/inverted_index/n_queries=10,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "inverted_index",
+      "params": {
+        "n_queries": 10,
+        "storage": "parquet-snappy"
+      },
+      "label": "Inverted index \u00b7 10 queries",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Inverted index \u00b7 10 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "text_search/inverted_index/n_queries=100,storage=parquet-snappy",
+      "workload": "text_search",
+      "variant": "inverted_index",
+      "params": {
+        "n_queries": 100,
+        "storage": "parquet-snappy"
+      },
+      "label": "Inverted index \u00b7 100 queries",
+      "studies": [
+        "text-search"
+      ],
+      "labels": {
+        "text-search": "Inverted index \u00b7 100 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "streaming/batch_recompute/storage=parquet-snappy",
+      "workload": "streaming",
+      "variant": "batch_recompute",
+      "params": {
+        "storage": "parquet-snappy"
+      },
+      "label": "Batch recompute",
+      "studies": [
+        "streaming-windows"
+      ],
+      "labels": {
+        "streaming-windows": "Batch recompute"
+      },
+      "skipped": null
+    },
+    {
+      "key": "streaming/incremental/storage=parquet-snappy",
+      "workload": "streaming",
+      "variant": "incremental",
+      "params": {
+        "storage": "parquet-snappy"
+      },
+      "label": "Incremental panes",
+      "studies": [
+        "streaming-windows"
+      ],
+      "labels": {
+        "streaming-windows": "Incremental panes"
+      },
+      "skipped": null
+    },
+    {
+      "key": "streaming/approx_hll/storage=parquet-snappy",
+      "workload": "streaming",
+      "variant": "approx_hll",
+      "params": {
+        "storage": "parquet-snappy"
+      },
+      "label": "Incremental + HyperLogLog",
+      "studies": [
+        "streaming-windows"
+      ],
+      "labels": {
+        "streaming-windows": "Incremental + HyperLogLog"
+      },
+      "skipped": null
+    },
+    {
+      "key": "streaming/approx_sampling/storage=parquet-snappy",
+      "workload": "streaming",
+      "variant": "approx_sampling",
+      "params": {
+        "storage": "parquet-snappy"
+      },
+      "label": "10 % user sample",
+      "studies": [
+        "streaming-windows"
+      ],
+      "labels": {
+        "streaming-windows": "10 % user sample"
+      },
+      "skipped": null
+    },
+    {
+      "key": "indexing/scan/n_queries=1000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "scan",
+      "params": {
+        "n_queries": 1000,
+        "storage": "parquet-snappy"
+      },
+      "label": "No index (full scan) \u00b7 1,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "No index (full scan) \u00b7 1,000 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "indexing/scan/n_queries=100000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "scan",
+      "params": {
+        "n_queries": 100000,
+        "storage": "parquet-snappy"
+      },
+      "label": "No index (full scan) \u00b7 100,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "No index (full scan) \u00b7 100,000 queries"
+      },
+      "skipped": "full scans are capped at 2,000 queries (minutes per run beyond that)"
+    },
+    {
+      "key": "indexing/btree/n_queries=1000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "btree",
+      "params": {
+        "n_queries": 1000,
+        "storage": "parquet-snappy"
+      },
+      "label": "B+-tree \u00b7 1,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "B+-tree \u00b7 1,000 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "indexing/btree/n_queries=100000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "btree",
+      "params": {
+        "n_queries": 100000,
+        "storage": "parquet-snappy"
+      },
+      "label": "B+-tree \u00b7 100,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "B+-tree \u00b7 100,000 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "indexing/hash_index/n_queries=1000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "hash_index",
+      "params": {
+        "n_queries": 1000,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash index \u00b7 1,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "Hash index \u00b7 1,000 queries"
+      },
+      "skipped": null
+    },
+    {
+      "key": "indexing/hash_index/n_queries=100000,storage=parquet-snappy",
+      "workload": "indexing",
+      "variant": "hash_index",
+      "params": {
+        "n_queries": 100000,
+        "storage": "parquet-snappy"
+      },
+      "label": "Hash index \u00b7 100,000 queries",
+      "studies": [
+        "indexing"
+      ],
+      "labels": {
+        "indexing": "Hash index \u00b7 100,000 queries"
+      },
+      "skipped": null
+    }
+  ],
+  "idle": [
+    {
+      "at": "2026-11-04T00:47:57.078476+00:00",
+      "seconds": 10.037207500005024,
+      "average": {
+        "pkg_w": 6.0991710092243405,
+        "cores_w": 0.6624476978475815,
+        "slow_vddcr_vdd_power_w": 1.6253992101275967,
+        "slow_vddcr_soc_power_w": 2.324037593203754,
+        "slow_current_socket_power_w": 6.804846232855446,
+        "slow_apu_power_w": 6.40480392244167
+      },
+      "samples": [
+        {
+          "pkg_w": 6.1151816371431185,
+          "cores_w": 0.5346289264008497
+        },
+        {
+          "pkg_w": 6.24810058670046,
+          "cores_w": 0.827178612681186
+        },
+        {
+          "pkg_w": 5.744201753426718,
+          "cores_w": 0.5149965764710477
+        },
+        {
+          "pkg_w": 6.3781166037391,
+          "cores_w": 0.85979440109356
+        },
+        {
+          "pkg_w": 6.008667658898174,
+          "cores_w": 0.555282283054156
+        },
+        {
+          "pkg_w": 6.644440882885546,
+          "cores_w": 0.8634324651227512
+        },
+        {
+          "pkg_w": 5.898859659928785,
+          "cores_w": 0.5144618274500324
+        },
+        {
+          "pkg_w": 5.830742385070099,
+          "cores_w": 0.594306452468757
+        },
+        {
+          "pkg_w": 6.213206253462525,
+          "cores_w": 0.8264954155866318
+        },
+        {
+          "pkg_w": 5.861571738501653,
+          "cores_w": 0.5307598529259075
+        }
+      ],
+      "system_cpu_percent": 5.2
+    },
+    {
+      "at": "2026-11-04T00:51:01.954344+00:00",
+      "seconds": 5.018959499997436,
+      "average": {
+        "pkg_w": 6.165163316981651,
+        "cores_w": 0.6976446014353972,
+        "slow_vddcr_vdd_power_w": 1.307050960185031,
+        "slow_vddcr_soc_power_w": 2.5540089687524703,
+        "slow_current_socket_power_w": 6.712586865226752,
+        "slow_apu_power_w": 6.473533716620034
+      },
+      "samples": [
+        {
+          "pkg_w": 6.714853374185665,
+          "cores_w": 1.0289425834313515
+        },
+        {
+          "pkg_w": 6.31257583328292,
+          "cores_w": 0.7517639364151086
+        },
+        {
+          "pkg_w": 5.74594303471464,
+          "cores_w": 0.4817303206042148
+        },
+        {
+          "pkg_w": 6.197525138479082,
+          "cores_w": 0.7511220919970195
+        },
+        {
+          "pkg_w": 5.827146743455024,
+          "cores_w": 0.475447283290087
+        }
+      ],
+      "system_cpu_percent": 6.7
+    },
+    {
+      "at": "2026-11-04T00:54:05.748810+00:00",
+      "seconds": 5.0162329000013415,
+      "average": {
+        "pkg_w": 6.11037418186506,
+        "cores_w": 0.6121007651808347,
+        "slow_vddcr_vdd_power_w": 1.7894907673837495,
+        "slow_vddcr_soc_power_w": 2.5427010512207118,
+        "slow_current_socket_power_w": 7.113365094829962,
+        "slow_apu_power_w": 6.453222096441594
+      },
+      "samples": [
+        {
+          "pkg_w": 5.803750212488237,
+          "cores_w": 0.4502058594105394
+        },
+        {
+          "pkg_w": 6.438159855977442,
+          "cores_w": 0.7413290868285203
+        },
+        {
+          "pkg_w": 6.059776447177158,
+          "cores_w": 0.4331235872961625
+        },
+        {
+          "pkg_w": 6.144572510138803,
+          "cores_w": 0.7146462102924637
+        },
+        {
+          "pkg_w": 6.102030384689291,
+          "cores_w": 0.7205190289607081
+        }
+      ],
+      "system_cpu_percent": 5.8
+    },
+    {
+      "at": "2026-11-04T00:57:15.011540+00:00",
+      "seconds": 5.0173965000140015,
+      "average": {
+        "pkg_w": 6.402200822419208,
+        "cores_w": 0.9192476608903337,
+        "slow_vddcr_vdd_power_w": 1.728111172872162,
+        "slow_vddcr_soc_power_w": 2.067425175580025,
+        "slow_current_socket_power_w": 6.457950843452899,
+        "slow_apu_power_w": 6.744749837149484
+      },
+      "samples": [
+        {
+          "pkg_w": 6.821499791256453,
+          "cores_w": 1.2718451647497255
+        },
+        {
+          "pkg_w": 5.8887512607944545,
+          "cores_w": 0.5675760417761508
+        },
+        {
+          "pkg_w": 6.110276841130374,
+          "cores_w": 0.7012711621806611
+        },
+        {
+          "pkg_w": 6.5682388611772184,
+          "cores_w": 0.912405608948879
+        },
+        {
+          "pkg_w": 6.608155525799472,
+          "cores_w": 1.140891888817301
+        }
+      ],
+      "system_cpu_percent": 7.8
+    },
+    {
+      "at": "2026-11-04T01:00:24.859034+00:00",
+      "seconds": 5.014758699995582,
+      "average": {
+        "pkg_w": 6.312031524075344,
+        "cores_w": 0.7651205639876312,
+        "slow_vddcr_vdd_power_w": 1.352377361646676,
+        "slow_vddcr_soc_power_w": 2.169746002735719,
+        "slow_current_socket_power_w": 5.755690550296078,
+        "slow_apu_power_w": 5.410131309570547
+      },
+      "samples": [
+        {
+          "pkg_w": 6.3377959163837065,
+          "cores_w": 0.8515605404064229
+        },
+        {
+          "pkg_w": 6.39582227189996,
+          "cores_w": 0.8686720206962276
+        },
+        {
+          "pkg_w": 6.38854878035981,
+          "cores_w": 0.9283880747151377
+        },
+        {
+          "pkg_w": 6.093298068131419,
+          "cores_w": 0.563922658788118
+        },
+        {
+          "pkg_w": 6.336082762889707,
+          "cores_w": 0.6076254063247815
+        }
+      ],
+      "system_cpu_percent": 6.7
+    },
+    {
+      "at": "2026-11-04T01:03:59.504665+00:00",
+      "seconds": 5.0171261000068625,
+      "average": {
+        "pkg_w": 6.248429753433865,
+        "cores_w": 0.7743716076012701,
+        "slow_vddcr_vdd_power_w": 2.0523620050898677,
+        "slow_vddcr_soc_power_w": 2.1216063687107996,
+        "slow_current_socket_power_w": 6.981710126035759,
+        "slow_apu_power_w": 6.581123912344246
+      },
+      "samples": [
+        {
+          "pkg_w": 6.604770950310665,
+          "cores_w": 0.9332330427482798
+        },
+        {
+          "pkg_w": 5.893937033806092,
+          "cores_w": 0.5653280798788884
+        },
+        {
+          "pkg_w": 6.289985307773883,
+          "cores_w": 0.8613963147740744
+        },
+        {
+          "pkg_w": 5.916801620938876,
+          "cores_w": 0.5931982969971428
+        },
+        {
+          "pkg_w": 6.5181112911444306,
+          "cores_w": 0.9156419465780301
+        }
+      ],
+      "system_cpu_percent": 6.4
+    },
+    {
+      "at": "2026-11-04T01:06:17.333893+00:00",
+      "seconds": 10.035359899993637,
+      "average": {
+        "pkg_w": 6.044511169074248,
+        "cores_w": 0.6709624833690834,
+        "slow_vddcr_vdd_power_w": 1.763878703185048,
+        "slow_vddcr_soc_power_w": 2.5245133778622186,
+        "slow_current_socket_power_w": 7.053109189241988,
+        "slow_apu_power_w": 6.194891985969894
+      },
+      "samples": [
+        {
+          "pkg_w": 6.229513535571449,
+          "cores_w": 0.7821049576141832
+        },
+        {
+          "pkg_w": 6.012185904685864,
+          "cores_w": 0.5479041398861929
+        },
+        {
+          "pkg_w": 6.3800537315211745,
+          "cores_w": 0.8470336024169483
+        },
+        {
+          "pkg_w": 5.835459431871751,
+          "cores_w": 0.5125581650526125
+        },
+        {
+          "pkg_w": 6.187843245938878,
+          "cores_w": 0.7307618550033446
+        },
+        {
+          "pkg_w": 5.7151622504624715,
+          "cores_w": 0.47127977657619724
+        },
+        {
+          "pkg_w": 5.7573535746017175,
+          "cores_w": 0.5242904728940636
+        },
+        {
+          "pkg_w": 6.19082012675968,
+          "cores_w": 0.7509148876441615
+        },
+        {
+          "pkg_w": 5.960512030430045,
+          "cores_w": 0.6803941298322316
+        },
+        {
+          "pkg_w": 6.149516793447652,
+          "cores_w": 0.851334095500905
+        }
+      ],
+      "system_cpu_percent": 5.9
+    }
+  ],
+  "dataset": {
+    "scale": "medium",
+    "seed": 20261104,
+    "rows": {
+      "customers": 200000,
+      "orders": 2000000,
+      "documents": 50000,
+      "events": 2000000,
+      "kv": 2000000
+    },
+    "bytes": {
+      "customers": {
+        "csv": 8354967,
+        "csv-zstd": 2070973,
+        "json": 18354919,
+        "json-zstd": 2519952,
+        "parquet": 2199301,
+        "parquet-snappy": 2083491,
+        "parquet-zstd": 1763702
+      },
+      "orders": {
+        "csv": 91060556,
+        "csv-zstd": 29171261,
+        "json": 203060502,
+        "json-zstd": 34269722,
+        "parquet": 53769687,
+        "parquet-snappy": 36754269,
+        "parquet-zstd": 23168460
+      },
+      "documents": {
+        "parquet-snappy": 5272349
+      },
+      "events": {
+        "parquet-snappy": 14351927
+      },
+      "kv": {
+        "parquet-snappy": 30003053
+      }
+    }
+  },
+  "finished_at": "2026-11-04T01:06:17.333893+00:00",
+  "state": "completed",
+  "corrections": [
+    "environment.os.release relabelled 10 -> 11 after the run: Python 3.11 reports Windows 11 as release 10; build 10.0.26200 is Windows 11. Measurements are unaffected.",
+    "environment.cpu.tdp_source reworded (same 35 W value)."
+  ]
+}

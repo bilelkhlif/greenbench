@@ -1,0 +1,13 @@
+{
+  "state": "completed",
+  "done": 348,
+  "total": 348,
+  "measured": 290,
+  "invalid": 0,
+  "errors": 0,
+  "started_at": "2026-11-04T00:47:44.939685+00:00",
+  "current": null,
+  "eta_s": null,
+  "updated_at": "2026-11-04T01:06:19.068286+00:00",
+  "finished_at": "2026-11-04T01:06:17.333893+00:00"
+}

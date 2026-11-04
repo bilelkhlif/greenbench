@@ -1,0 +1,42 @@
+.chart { position: relative; width: 100%; min-width: 0; }
+.chart svg { display: block; overflow: visible; }
+.chart .axis text { font: 400 10.5px/1 var(--font-mono); fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+.chart .axis .axis-title { font: 500 10.5px/1 var(--font-mono); fill: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.chart .row-label { font: 500 12.5px/1 var(--font); fill: var(--ink); }
+.chart .row-label.strong { font-weight: 700; fill: var(--ink-heading); }
+.chart .row-sub { font: 400 11px/1 var(--font); fill: var(--ink-3); }
+.chart .end-label, .chart .point-label { font: 500 11.5px/1 var(--font); fill: var(--ink-2); }
+.chart .bar-value { font: 500 11.5px/1 var(--font-mono); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chart-tip {
+  position: absolute; z-index: 5; pointer-events: none; max-width: 300px;
+  background: rgba(9, 14, 22, 0.94); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  padding: 9px 12px; font: 400 12px/18px var(--font); box-shadow: var(--shadow-2);
+  backdrop-filter: blur(10px);
+}
+.chart-tip b { font-weight: 600; color: #fff; }
+.chart-tip .muted { color: var(--ink-3); }
+.chart-tip .tip-row { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chart-tip .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 10px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/16px var(--font); color: var(--ink-2); }
+.chart-card h3 { color: var(--ink-heading); }
+.chart-card .chart-sub { color: var(--ink-3); margin: 6px 0 18px; }
+
+/* Entrance: once a chart scrolls into view, lines draw themselves, dots pop in, bars grow from the axis */
+.chart .a-dot, .chart .a-fade { opacity: 0; }
+.chart .a-dot { transform-box: fill-box; transform-origin: center; }
+.chart .a-line { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.chart .a-bar { transform-box: fill-box; transform-origin: 0 50%; transform: scaleX(0); }
+.chart.drawn .a-dot { animation: dot-in 0.55s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 12ms + 150ms); }
+.chart.drawn .a-fade { animation: fade-in 0.7s ease both; animation-delay: calc(var(--i, 0) * 30ms + 100ms); }
+.chart.drawn .a-line { animation: line-draw 1.2s var(--ease-out) 0.15s forwards; }
+.chart.drawn .a-bar { animation: bar-grow 0.9s var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 45ms + 100ms); }
+@keyframes dot-in { from { opacity: 0; transform: scale(0.2); } to { opacity: var(--o, 1); transform: scale(1); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: var(--o, 1); } }
+@keyframes line-draw { to { stroke-dashoffset: 0; } }
+@keyframes bar-grow { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .chart .a-dot, .chart .a-fade { opacity: var(--o, 1); animation: none !important; }
+  .chart .a-line { stroke-dashoffset: 0; animation: none !important; }
+  .chart .a-bar { transform: none; animation: none !important; }
+}

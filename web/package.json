@@ -1,0 +1,32 @@
+{
+  "name": "greenbench-web",
+  "private": true,
+  "version": "0.7.0",
+  "type": "module",
+  "description": "GreenBench AI dashboard (React + Vite + Motion): dark aurora theme with animated page transitions.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && node scripts/clean-static.mjs && vite build",
+    "preview": "vite preview",
+    "build:pages": "tsc --noEmit && node scripts/deploy-pages.mjs --no-push",
+    "deploy:pages": "tsc --noEmit && node scripts/deploy-pages.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@heroicons/react": "^2.2.0",
+    "marked": "^18.1.3",
+    "motion": "14.5.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
