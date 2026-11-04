@@ -7,7 +7,7 @@
 //
 // usage (from web/): npm run deploy:pages      or  npm run build:pages  to build web/dist-pages only
 import { execFileSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +18,13 @@ const out = join(web, "dist-pages");
 const push = !process.argv.includes("--no-push");
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", ...opts });
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+// fs.cpSync kills the process (exit 127, no error) when the source path has non-ASCII characters (Node 24, Windows)
+const copyDir = (from, to) => {
+  mkdirSync(to, { recursive: true });
+  for (const e of readdirSync(from, { withFileTypes: true })) {
+    (e.isDirectory() ? copyDir : copyFileSync)(join(from, e.name), join(to, e.name));
+  }
+};
 
 const remote = git("remote", "get-url", "origin");
 const match = remote.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?\/?$/);
@@ -62,7 +69,7 @@ try {
 }
 const tmp = mkdtempSync(join(tmpdir(), "greenbench-pages-"));
 try {
-  cpSync(out, tmp, { recursive: true });
+  copyDir(out, tmp);
   const g = (...args) => sh("git", [...identity, ...auth, ...args], { cwd: tmp });
   g("init", "-q", "-b", "gh-pages");
   g("add", "-A");
