@@ -4,7 +4,8 @@ Reads /sys/class/powercap/intel-rapl:*/energy_uj (also used for AMD Zen since Li
 Since the PLATYPUS disclosure (2020) energy_uj is root-readable only on most kernels:
 run as root, inside a container started with access to /sys/class/powercap, or grant
 read access, e.g. `sudo chmod a+r /sys/class/powercap/intel-rapl:*/energy_uj`.
-Counters wrap at max_energy_range_uj; wrap-around is corrected on every read.
+Counters wrap at max_energy_range_uj; wrap-around is corrected on every read. Multi-socket
+machines expose one package zone per socket; their energy is summed into the "pkg" domain.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from pathlib import Path
 from greenbench.meters.base import EnergyMeter, MeterUnavailable, Reading
 
 BASE = Path("/sys/class/powercap")
+ZONE_GLOB = "intel-rapl:*"  # top-level and sub-zones; the duplicate intel-rapl-mmio:* view is excluded
 _NAMES = {"core": "cores", "dram": "dram", "uncore": "gpu", "psys": "psys"}
 
 
@@ -22,15 +24,19 @@ class RaplMeter(EnergyMeter):
     name = "rapl"
     kind = "hardware"
 
-    def __init__(self):
-        if not BASE.exists():
-            raise MeterUnavailable("no /sys/class/powercap (not Linux, or RAPL not exposed, e.g. inside a VM)")
+    def __init__(self, base: Path | str | None = None):
+        root = Path(base) if base is not None else BASE
+        if not root.exists():
+            raise MeterUnavailable(f"no {root} (not Linux, or RAPL not exposed, e.g. inside a VM)")
         zones = []
-        for zone in sorted(BASE.glob("intel-rapl:*")):
+        for zone in sorted(root.glob(ZONE_GLOB)):
             name_file, energy_file = zone / "name", zone / "energy_uj"
-            if not energy_file.exists():
+            if not energy_file.exists() or not name_file.exists():
                 continue
-            raw = name_file.read_text().strip()
+            try:
+                raw = name_file.read_text().strip()
+            except OSError:
+                continue
             dom = "pkg" if raw.startswith("package") else _NAMES.get(raw)
             if dom is None:
                 continue
@@ -39,15 +45,22 @@ class RaplMeter(EnergyMeter):
             except PermissionError as exc:
                 raise MeterUnavailable("RAPL counters are not readable: run as root or "
                                        "chmod a+r /sys/class/powercap/intel-rapl:*/energy_uj") from exc
-            max_range = int((zone / "max_energy_range_uj").read_text())
+            except (OSError, ValueError):
+                continue  # a zone the kernel lists but cannot read (disabled domain): ignore it
+            try:
+                max_range = int((zone / "max_energy_range_uj").read_text())
+            except (OSError, ValueError):
+                max_range = 2**32  # documented default width of the RAPL energy status register (in uJ steps)
             zones.append((dom, energy_file, max_range))
         if not any(d == "pkg" for d, _, _ in zones):
             raise MeterUnavailable("no RAPL package zone found")
+        self.base = root
         self._zones = zones
         self._last = [int(f.read_text()) for _, f, _ in zones]
         self._acc = [0.0] * len(zones)
         doms = sorted({d for d, _, _ in zones})
         self.domains = tuple(["pkg"] + [d for d in doms if d != "pkg"])
+        self.packages = sum(d == "pkg" for d, _, _ in zones)
 
     def read(self) -> Reading:
         t = time.perf_counter()
@@ -65,5 +78,7 @@ class RaplMeter(EnergyMeter):
     def describe(self) -> dict:
         info = super().describe()
         info.update({"interface": "Linux powercap (intel-rapl)",
+                     "provider": "powercap/intel-rapl",
+                     "packages": self.packages,
                      "channels": {str(f.parent.name): d for d, f, _ in self._zones}})
         return info

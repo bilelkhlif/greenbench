@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 from importlib import metadata
+from pathlib import Path
 
 import psutil
 
@@ -52,6 +53,38 @@ def _windows_power_plan() -> str | None:
         return m.group(1) if m else None
     except OSError:
         return None
+
+
+def _read_sys(path: Path) -> str | None:
+    try:
+        return path.read_text().strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def linux_cpufreq(root: Path = Path("/sys/devices/system/cpu")) -> dict | None:
+    """Frequency-scaling state on Linux (the counterpart of the Windows power plan).
+
+    The governor, the energy-performance preference and turbo all change how much energy the
+    same computation costs, so they are recorded with every campaign run on Linux.
+    """
+    cpu0 = root / "cpu0" / "cpufreq"
+    if not cpu0.exists():
+        return None
+    driver = _read_sys(cpu0 / "scaling_driver")
+    turbo = None
+    no_turbo = _read_sys(root / "intel_pstate" / "no_turbo")
+    boost = _read_sys(root / "cpufreq" / "boost")
+    if no_turbo is not None:
+        turbo = no_turbo == "0"
+    elif boost is not None:
+        turbo = boost == "1"
+    governors = sorted({g for g in (_read_sys(c / "cpufreq" / "scaling_governor")
+                                    for c in root.glob("cpu[0-9]*")) if g})
+    return {"driver": driver, "governor": governors[0] if len(governors) == 1 else ",".join(governors) or None,
+            "energy_performance_preference": _read_sys(cpu0 / "energy_performance_preference"),
+            "turbo": turbo,
+            "intel_pstate_status": _read_sys(root / "intel_pstate" / "status")}
 
 
 def _virtualization() -> dict:
@@ -99,6 +132,7 @@ def fingerprint(include_meters: bool = True) -> dict:
     tdp, tdp_source = detect_tdp(name)
     battery = psutil.sensors_battery() if hasattr(psutil, "sensors_battery") else None
     freq = psutil.cpu_freq()
+    cpufreq = linux_cpufreq() if sys.platform.startswith("linux") else None
     env = {
         "greenbench": __version__,
         "os": {"system": platform.system(), "release": _os_release(), "version": platform.version(),
@@ -111,7 +145,9 @@ def fingerprint(include_meters: bool = True) -> dict:
         "memory_gb": round(psutil.virtual_memory().total / 2**30, 1),
         "power": {"ac_plugged": None if battery is None else bool(battery.power_plugged),
                   "battery_percent": None if battery is None else round(battery.percent),
-                  "plan": _windows_power_plan() if sys.platform == "win32" else None},
+                  "plan": _windows_power_plan() if sys.platform == "win32"
+                  else (cpufreq or {}).get("governor"),
+                  "cpufreq": cpufreq},
         "virtualization": _virtualization(),
         "libraries": {p: _version(p) for p in ("numpy", "pyarrow", "scipy", "psutil")},
     }
