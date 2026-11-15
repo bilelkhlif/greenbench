@@ -27,7 +27,7 @@ from greenbench.data.generate import ensure_dataset, load_meta, storage_sizes
 from greenbench.environment import fingerprint
 from greenbench.meters import open_meter
 from greenbench.paths import results_dir
-from greenbench.protocol.plan import PRESETS, STUDIES, expand, schedule
+from greenbench.protocol.plan import PRESETS, STUDIES, default_studies, expand, schedule
 from greenbench.protocol.reference import ensure_reference
 from greenbench.workloads import get
 
@@ -38,7 +38,7 @@ IDLE_EVERY_N_RUNS = 60
 @dataclass
 class CampaignConfig:
     preset: str = "standard"
-    studies: list[str] = field(default_factory=lambda: list(STUDIES))
+    studies: list[str] = field(default_factory=default_studies)
     scale: str | None = None
     repetitions: int | None = None
     warmups: int | None = None

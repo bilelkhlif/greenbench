@@ -96,7 +96,8 @@ def execute(spec: dict) -> dict:
     else:
         ref = load_reference_arrays(data_dir, w.name, params)
         record["valid"] = True
-        record["accuracy"] = accuracy(result, ref)
+        score = getattr(w, "accuracy_of", None) or accuracy  # e.g. CNN: share of changed labels
+        record["accuracy"] = score(result, ref)
     if not record["valid"]:
         record["status"] = "invalid"
     record["result_summary"] = w.summary_of(result)

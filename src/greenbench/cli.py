@@ -72,10 +72,10 @@ def cmd_list(args) -> None:
 
 
 def cmd_run(args) -> None:
-    from greenbench.protocol.plan import STUDIES
+    from greenbench.protocol.plan import default_studies
     from greenbench.protocol.runner import CampaignConfig, Runner
 
-    studies = args.studies.split(",") if args.studies else list(STUDIES)
+    studies = args.studies.split(",") if args.studies else default_studies()
     cfg = CampaignConfig(preset=args.preset, studies=studies, scale=args.scale, repetitions=args.repetitions,
                          warmups=args.warmups, cooldown_s=args.cooldown, meter=args.meter, seed=args.seed,
                          notes=args.notes or "", campaign_id=args.id)
@@ -142,7 +142,8 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("run", help="run a measurement campaign")
     s.add_argument("--preset", default="standard", choices=["quick", "standard", "full"])
-    s.add_argument("--studies", help="comma-separated study ids (default: all)")
+    s.add_argument("--studies", help="comma-separated study ids (default: every data-processing study; "
+                   "add cnn-convolution,cnn-batching for CNN inference)")
     s.add_argument("--scale", choices=["tiny", "small", "medium"])
     s.add_argument("--repetitions", type=int)
     s.add_argument("--warmups", type=int)

@@ -17,8 +17,8 @@ def client(tiny_dir):
 
 
 def test_catalogue_endpoints(client):
-    assert {w["name"] for w in client.get("/api/workloads").json()} == {"joins", "text_search", "streaming", "indexing"}
-    assert len(client.get("/api/studies").json()) == 5
+    assert {w["name"] for w in client.get("/api/workloads").json()} == {"joins", "text_search", "streaming", "indexing", "cnn"}
+    assert len(client.get("/api/studies").json()) == 7  # 5 data-processing studies + 2 opt-in CNN studies
     assert {p["name"] for p in client.get("/api/presets").json()} == {"quick", "standard", "full"}
     assert client.get("/api/roadmap").json()["current_week"] == 7
 

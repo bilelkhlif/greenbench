@@ -29,6 +29,9 @@ class Study:
     # Comparisons are made within groups sharing these factor values (e.g. same query count).
     group_by: tuple[str, ...] = ()
     fallback_baselines: tuple[dict, ...] = ()
+    # Part of a campaign when no study is named. The CNN studies are opt-in (--studies), so the
+    # default campaign stays the week-7 data-processing protocol.
+    default: bool = True
 
 
 STUDIES: dict[str, Study] = {s.id: s for s in [
@@ -53,7 +56,20 @@ STUDIES: dict[str, Study] = {s.id: s for s in [
           "indexing", {"variant": ["scan", "btree", "hash_index"], "n_queries": [1_000, 100_000]},
           baseline={"variant": "scan"}, fixed={"storage": DEFAULT_STORAGE}, group_by=("n_queries",),
           fallback_baselines=({"variant": "btree"},)),
+    Study("cnn-convolution", "CNN inference: convolution algorithm",
+          "Which convolution algorithm predicts the same labels with the least energy, and is float32 worth "
+          "its changed labels?",
+          "cnn", {"variant": ["im2col", "direct", "fft", "winograd", "im2col_fp32"]},
+          baseline={"variant": "im2col"}, fixed={"batch_size": 64}, default=False),
+    Study("cnn-batching", "CNN inference: batch size",
+          "How much energy does batching images save when the predictions are identical?",
+          "cnn", {"batch_size": [1, 8, 64, 256]}, baseline={"batch_size": 1}, fixed={"variant": "im2col"},
+          default=False),
 ]}
+
+
+def default_studies() -> list[str]:
+    return [s.id for s in STUDIES.values() if s.default]
 
 
 @dataclass(frozen=True)
@@ -86,6 +102,8 @@ def _fmt(knob: str, value: Any) -> str:
         return f"{int(value):,} quer" + ("ies" if int(value) > 1 else "y")
     if knob == "storage":
         return STORAGE_LABELS.get(value, value)
+    if knob == "batch_size":
+        return "1 image at a time" if int(value) == 1 else f"batches of {int(value)}"
     return f"{knob}={value}"
 
 

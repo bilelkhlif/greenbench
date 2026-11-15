@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from greenbench import __version__
 from greenbench.analysis.analyze import analyze_campaign
 from greenbench.paths import docs_dir, results_dir
-from greenbench.protocol.plan import PRESETS, STUDIES, describe_studies, expand
+from greenbench.protocol.plan import PRESETS, STUDIES, default_studies, describe_studies, expand
 from greenbench.roadmap import DOCS, roadmap
 from greenbench.workloads import WORKLOADS
 
@@ -154,7 +154,7 @@ def studies():
 
 @app.get("/api/presets")
 def presets():
-    configs, _ = expand(list(STUDIES))
+    configs, _ = expand(default_studies())
     runnable = sum(not c.skipped for c in configs)
     return [{**p.__dict__, "runs": runnable * (p.repetitions + p.warmups)} for p in PRESETS.values()]
 
@@ -191,7 +191,7 @@ def campaign_analysis(cid: str):
 
 class LaunchRequest(BaseModel):
     preset: str = "quick"
-    studies: list[str] = Field(default_factory=lambda: list(STUDIES))
+    studies: list[str] = Field(default_factory=default_studies)
     repetitions: int | None = Field(default=None, ge=1, le=100)
     warmups: int | None = Field(default=None, ge=0, le=10)
     notes: str = ""
